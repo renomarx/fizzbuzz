@@ -1,0 +1,23 @@
+info:
+  contact: {}
+  title: Fizzbuzz API
+  version: "1.0"
+paths:
+  /customers:
+    get:
+      description: get a fizzbuzz string from params
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: fizzbuzz
+swagger: "2.0"

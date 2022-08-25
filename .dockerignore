@@ -1,0 +1,5 @@
+build/
+configs/
+README.md
+docker-compose.yml
+Makefile
