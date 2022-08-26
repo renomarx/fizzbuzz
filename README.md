@@ -54,10 +54,25 @@ Using it as a package
 ```golang
 package main
 
-func main() {
-  // TODO
-}
+import (
+	"fmt"
 
+	"github.com/renomarx/fizzbuzz/pkg/core/model"
+	"github.com/renomarx/fizzbuzz/pkg/core/service"
+)
+
+func main() {
+	fizzbuzz := service.NewFizzbuzzSVC()
+	result := fizzbuzz.Fizzbuzz(model.Params{
+		Int1:  3,
+		Int2:  5,
+		Limit: 16,
+		Str1:  "fizz",
+		Str2:  "buzz",
+	})
+	fmt.Println(result)
+	// [1 2 fizz 4 buzz fizz 7 8 fizz buzz 11 fizz 13 14 fizzbuzz 16]
+}
 ```
 
 
@@ -71,3 +86,18 @@ Architecture / technical choices
 
 - `pkg` vs `internal`: everything is in `pkg` directory because nothing aims to be private. If someone
 is particularly impressed by my implementation of the fizzbuzz algorithm, and wants to use it for himself, he can (and yes, for free !)
+
+- Prometheus metrics: I like to have metrics on my services, and I like to use prometheus for that, particularly for services exposing a http API.
+
+- Using sqlite as a database (for the bonus part): I assumed that we needed data persistence for statistics, so I used a database. I hesitated between using SQL and a key-value database like redis,
+but SQL was finally more convenient.
+
+- Pre-aggregated data in database: I choosed to use pre-aggregated data model instead of storing every request to avoid
+a database growing too much over time that would lead to reduced performances. But it will not be really efficient if we have a high diversity of requests among users. We could have done any of that using prometheus metrics and promql too, but I think it was not the point of the exercise
+
+- Using [sqlx](https://github.com/jmoiron/sqlx): because the most used ORM in go is gorm and I don't like it
+because it doesn't respect go idioms (methods chaining and bad errors handling). I found myself pretty quickly limited by ORMs too, so I usually
+prefer not using one (even if it saves some time at the beginning of a project)
+
+- Using [dbmate](https://github.com/amacneil/dbmate), because it's a good tool to handle migrations, especially useful when your company have more than
+one main coding language (like python and go): you can use the same tool in different projects
