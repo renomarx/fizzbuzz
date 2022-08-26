@@ -1,11 +1,53 @@
+definitions:
+  model.Stats:
+    properties:
+      counter:
+        type: integer
+      int1:
+        type: integer
+      int2:
+        type: integer
+      limit:
+        type: integer
+      str1:
+        type: string
+      str2:
+        type: string
+    type: object
 info:
   contact: {}
   title: Fizzbuzz API
   version: "1.0"
 paths:
-  /customers:
+  /fizzbuzz:
     get:
-      description: get a fizzbuzz string from params
+      description: generate a fizzbuzz string from params
+      parameters:
+      - description: first divider
+        in: query
+        name: int1
+        required: true
+        type: integer
+      - description: second divider
+        in: query
+        name: int2
+        required: true
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: first replacer string
+        in: query
+        name: str1
+        required: true
+        type: string
+      - description: second replacer string
+        in: query
+        name: str2
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -20,4 +62,15 @@ paths:
         "500":
           description: Internal Server Error
       summary: fizzbuzz
+  /stats:
+    get:
+      description: 'get stats: the counter of the most frequent request with its parameters'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Stats'
+      summary: stats
 swagger: "2.0"

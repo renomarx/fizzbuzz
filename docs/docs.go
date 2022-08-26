@@ -16,13 +16,50 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/customers": {
+        "/fizzbuzz": {
             "get": {
-                "description": "get a fizzbuzz string from params",
+                "description": "generate a fizzbuzz string from params",
                 "produces": [
                     "application/json"
                 ],
                 "summary": "fizzbuzz",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "first divider",
+                        "name": "int1",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "second divider",
+                        "name": "int2",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "first replacer string",
+                        "name": "str1",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "second replacer string",
+                        "name": "str2",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -39,6 +76,48 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error"
                     }
+                }
+            }
+        },
+        "/stats": {
+            "get": {
+                "description": "get stats: the counter of the most frequent request with its parameters",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "stats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Stats"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.Stats": {
+            "type": "object",
+            "properties": {
+                "counter": {
+                    "type": "integer"
+                },
+                "int1": {
+                    "type": "integer"
+                },
+                "int2": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "str1": {
+                    "type": "string"
+                },
+                "str2": {
+                    "type": "string"
                 }
             }
         }

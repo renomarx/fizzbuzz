@@ -15,7 +15,7 @@ Dev requirements
 
 Only required if you need to develop on this project.
 
-- Golang 1.18
+- Golang 1.19
 - Install swaggo: https://github.com/swaggo/swag#getting-started :
 ```bash
 go install github.com/swaggo/swag/cmd/swag@latest
@@ -33,7 +33,6 @@ Then access to:
 - API documentation (swagger): http://localhost:9098/docs/index.html
 - Metrics (Prometheus): http://localhost:9098/metrics
 - logs: `docker logs -f fizzbuzz_dev`
-- Postgres DB: accessible on `localhost:5432`
 - Test ping:
 ```bash
 curl -v http://localhost:9098/ping

@@ -1,3 +1,4 @@
+.PHONY: init-env build dev build-base tests doc
 
 init-env:
 	./scripts/init_env.sh
@@ -12,8 +13,7 @@ build-base:
 	docker build . -f build/Dockerfile --target builder -t fizzbuzz_base:latest
 
 tests: build-base
-	# docker-compose up -d postgres
-	docker run -t --env REDIS_ADDR="127.0.0.1:6379" --network host fizzbuzz_base:latest go test -cover ./...
+	docker run -t fizzbuzz_base:latest go test -cover ./...
 
 doc:
 	swag init -g cmd/fizzbuzz/main.go

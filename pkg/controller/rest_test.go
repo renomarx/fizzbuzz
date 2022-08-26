@@ -20,6 +20,23 @@ func (svc *FizzbuzzSVCMock) Fizzbuzz(params model.Params) []string {
 	return svc.Result
 }
 
+type RequestsRepoMock struct {
+	Params  model.Params
+	Counter int
+	Error   error
+	Stats   model.Stats
+}
+
+func (repo *RequestsRepoMock) Inc(params model.Params, number int) error {
+	repo.Params = params
+	repo.Counter = number
+	return repo.Error
+}
+
+func (repo *RequestsRepoMock) GetMaxStats() (model.Stats, error) {
+	return repo.Stats, repo.Error
+}
+
 func NewMockedAPI() *RestAPI {
 	return &RestAPI{
 		MetricsController: NewMetricsController(),
@@ -32,6 +49,8 @@ func TestRestAPIGenerateFizzbuzz(t *testing.T) {
 		Result: []string{"1", "2", "fizz"},
 	}
 	api.fizzbuzzSVC = svc
+	repo := &RequestsRepoMock{}
+	api.requestsRepo = repo
 
 	router := httprouter.New()
 	api.Route(router)
@@ -46,19 +65,20 @@ func TestRestAPIGenerateFizzbuzz(t *testing.T) {
 	router.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	assert.Equal(t, model.Params{
+	expectedParams := model.Params{
 		Int1:  3,
 		Int2:  5,
 		Limit: 3,
 		Str1:  "fizz",
 		Str2:  "buzz",
-	}, svc.Params)
+	}
+	assert.Equal(t, expectedParams, svc.Params)
+	assert.Equal(t, expectedParams, repo.Params)
+	assert.Equal(t, 1, repo.Counter)
 }
 
 func TestRestAPIGenerateFizzbuzzBadRequest(t *testing.T) {
 	api := NewMockedAPI()
-	svc := &FizzbuzzSVCMock{}
-	api.fizzbuzzSVC = svc
 
 	router := httprouter.New()
 	api.Route(router)
@@ -77,8 +97,6 @@ func TestRestAPIGenerateFizzbuzzBadRequest(t *testing.T) {
 
 func TestRestAPIGenerateFizzbuzzValidationFailed(t *testing.T) {
 	api := NewMockedAPI()
-	svc := &FizzbuzzSVCMock{}
-	api.fizzbuzzSVC = svc
 
 	router := httprouter.New()
 	api.Route(router)

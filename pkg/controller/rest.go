@@ -8,6 +8,7 @@ import (
 	"github.com/renomarx/fizzbuzz/pkg/core/model"
 	"github.com/renomarx/fizzbuzz/pkg/core/ports"
 	"github.com/renomarx/fizzbuzz/pkg/core/service"
+	"github.com/renomarx/fizzbuzz/pkg/repository"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/onrik/logrus/filename"
@@ -24,6 +25,7 @@ func init() {
 type RestAPI struct {
 	MetricsController *metricsController
 	fizzbuzzSVC       ports.FizzbuzzService
+	requestsRepo      ports.RequestsRepository
 }
 
 type RestAPIError struct {
@@ -33,9 +35,11 @@ type RestAPIError struct {
 // NewRestAPI RestAPI constructor with dependencies injected
 func NewRestAPI() *RestAPI {
 	fizzbuzzSVC := service.NewFizzbuzzSVC()
+	requestsRepo := repository.NewSQLIteRepo()
 	return &RestAPI{
 		MetricsController: NewMetricsController(),
 		fizzbuzzSVC:       fizzbuzzSVC,
+		requestsRepo:      requestsRepo,
 	}
 }
 
@@ -72,6 +76,9 @@ func (api *RestAPI) Route(r *httprouter.Router) {
 
 	r.GET("/fizzbuzz", api.GenerateFizzbuzz)
 	logrus.Infof("Serving /fizzbuzz")
+
+	r.GET("/stats", api.GetStats)
+	logrus.Infof("Serving /stats")
 }
 
 // Ping handle /ping http requests (for health checks)
@@ -94,6 +101,11 @@ func (api *RestAPI) NotFound(w http.ResponseWriter, r *http.Request) {
 // @Summary      fizzbuzz
 // @Description  generate a fizzbuzz string from params
 // @Produce      json
+// @Param        int1 query int true "first divider"
+// @Param        int2 query int true "second divider"
+// @Param        limit query int true "limit"
+// @Param        str1 query string true "first replacer string"
+// @Param        str2 query string true "second replacer string"
 // @Success      200  {array} string
 // @Failure      500
 // @Failure      400
@@ -116,7 +128,19 @@ func (api *RestAPI) GenerateFizzbuzz(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 	result := api.fizzbuzzSVC.Fizzbuzz(params)
+	api.requestsRepo.Inc(params, 1) // We can ignore the error if any
 	api.sendSuccessJSONObject(w, result)
+}
+
+// GetStats get stats: the counter of the most frequent request with its parameters
+// @Router       /stats [get]
+// @Summary      stats
+// @Description  get stats: the counter of the most frequent request with its parameters
+// @Produce      json
+// @Success      200  {object} model.Stats
+func (api *RestAPI) GetStats(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	stats, _ := api.requestsRepo.GetMaxStats() // Ignoring error, because that means result set is empty
+	api.sendSuccessJSONObject(w, stats)
 }
 
 func (api *RestAPI) sendSuccessJSONObject(w http.ResponseWriter, o interface{}) {
