@@ -14,7 +14,7 @@ import (
 
 // SQLiteRepo repository using SQLite db
 type SQLiteRepo struct {
-	db *sqlx.DB
+	DB *sqlx.DB
 }
 
 type requestsCounter struct {
@@ -63,7 +63,7 @@ func NewSQLIteRepo() *SQLiteRepo {
 		logrus.Fatal(err)
 	}
 	return &SQLiteRepo{
-		db: db,
+		DB: db,
 	}
 }
 
@@ -71,7 +71,7 @@ func (repo *SQLiteRepo) Inc(params model.Params, number int) error {
 	requestCounter := requestsCounter{}
 	requestCounter.FromParams(params)
 	// Insert if not exists
-	_, err := repo.db.NamedExec(`
+	_, err := repo.DB.NamedExec(`
 		INSERT OR IGNORE INTO requests_counters
 		(int1, int2, lim, str1, str2, counter)
 		VALUES
@@ -83,7 +83,7 @@ func (repo *SQLiteRepo) Inc(params model.Params, number int) error {
 	}
 	// Update
 	requestCounter.Counter = number
-	res, err := repo.db.NamedExec(`
+	res, err := repo.DB.NamedExec(`
 		UPDATE requests_counters SET counter = counter + :counter
 		WHERE int1=:int1
 		AND int2=:int2
@@ -111,7 +111,7 @@ func (repo *SQLiteRepo) Inc(params model.Params, number int) error {
 
 func (repo *SQLiteRepo) GetMaxStats() (stats model.Stats, err error) {
 	rc := requestsCounter{}
-	err = repo.db.Get(&rc, "SELECT * FROM requests_counters ORDER BY counter DESC LIMIT 1")
+	err = repo.DB.Get(&rc, "SELECT * FROM requests_counters ORDER BY counter DESC LIMIT 1")
 	if err != nil {
 		repo.error("error getting max counter of requests_counters", err)
 		return
