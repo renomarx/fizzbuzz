@@ -9,7 +9,6 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/renomarx/fizzbuzz/pkg/core/model"
-	"github.com/renomarx/fizzbuzz/pkg/core/service"
 	"github.com/renomarx/fizzbuzz/pkg/repository"
 	"github.com/stretchr/testify/assert"
 
@@ -34,14 +33,16 @@ func initTestDB(t *testing.T, db *sqlx.DB) {
 
 func TestRestAPIWholeFlow(t *testing.T) {
 	os.Setenv("SQLITE_DSN", ":memory:")
-	fizzbuzzSVC := service.NewFizzbuzzSVC()
-	requestsRepo := repository.NewSQLIteRepo()
-	initTestDB(t, requestsRepo.DB)
-	api := &RestAPI{
-		MetricsController: NewMetricsController(),
-		fizzbuzzSVC:       fizzbuzzSVC,
-		requestsRepo:      requestsRepo,
+
+	// Instanciating REST API
+	api := NewRestAPI()
+
+	// Initialization of test database
+	requestsRepo, ok := api.requestsRepo.(*repository.SQLiteRepo)
+	if !ok {
+		t.Fatal("requestsRepo is not SQLiteRepo - implementation has changed ?")
 	}
+	initTestDB(t, requestsRepo.DB)
 
 	router := httprouter.New()
 	api.Route(router)
@@ -68,6 +69,7 @@ func TestRestAPIWholeFlow(t *testing.T) {
 	router.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
 
+	// Getting stats: should be fizz buzz params
 	req, err = http.NewRequest("GET", "/stats", nil)
 	if err != nil {
 		t.Error(err)
@@ -86,4 +88,38 @@ func TestRestAPIWholeFlow(t *testing.T) {
 		Counter: 1,
 	}, stats)
 
+	// 2 fizzbuzz requests with gin tonic params
+	req, err = http.NewRequest("GET", "/fizzbuzz?int1=3&int2=5&limit=16&str1=gin&str2=tonic", nil)
+	if err != nil {
+		t.Error(err)
+	}
+	rr = httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	req, err = http.NewRequest("GET", "/fizzbuzz?int1=3&int2=5&limit=16&str1=gin&str2=tonic", nil)
+	if err != nil {
+		t.Error(err)
+	}
+	rr = httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// Getting stats again: should be gin tonic params, with counter = 2
+	req, err = http.NewRequest("GET", "/stats", nil)
+	if err != nil {
+		t.Error(err)
+	}
+	rr = httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	response = rr.Body.Bytes()
+	json.Unmarshal(response, &stats)
+	assert.Equal(t, model.Stats{
+		Int1:    3,
+		Int2:    5,
+		Limit:   16,
+		Str1:    "gin",
+		Str2:    "tonic",
+		Counter: 2,
+	}, stats)
 }

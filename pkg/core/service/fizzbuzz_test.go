@@ -34,3 +34,10 @@ func TestFizzbuzzNoTonicWithoutGin(t *testing.T) {
 	expected := []string{"1", "2", "gin", "4", "5", "gintonic", "7", "8", "gin", "10", "11", "gintonic", "13", "14", "gin", "16", "17", "gintonic", "19", "20"}
 	assert.Equal(t, expected, res)
 }
+
+func TestFizzbuzzEmpty(t *testing.T) {
+	svc := NewFizzbuzzSVC()
+	res := svc.Fizzbuzz(model.Params{})
+	expected := []string{}
+	assert.Equal(t, expected, res)
+}
