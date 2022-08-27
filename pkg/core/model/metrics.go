@@ -17,6 +17,7 @@ func init() {
 	InitMetrics()
 }
 
+// Metrics defining app metrics
 type Metrics struct {
 	Middleware middleware.Middleware
 
@@ -31,6 +32,7 @@ func (m *Metrics) HTTPHandler() http.Handler {
 	return promhttp.Handler()
 }
 
+// InitMetrics init all app metrics
 func InitMetrics() {
 	AppMetrics.Middleware = middleware.New(middleware.Config{
 		Recorder: prometheusMetrics.NewRecorder(prometheusMetrics.Config{}),
@@ -52,6 +54,7 @@ func InitMetrics() {
 	prometheus.MustRegister(AppMetrics.DatabaseErrors)
 }
 
+// IncDatabaseErrors by msg, by 1
 func (m *Metrics) IncDatabaseErrors(msg string) {
 	m.DatabaseErrors.WithLabelValues(msg).Inc()
 }

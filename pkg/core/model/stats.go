@@ -1,5 +1,6 @@
 package model
 
+// Stats model for requests statitistics: counter, by params
 type Stats struct {
 	Int1    int    `json:"int1"`
 	Int2    int    `json:"int2"`

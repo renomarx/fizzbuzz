@@ -47,6 +47,62 @@ make tests
 ```
 
 
+Benchmarks
+----------
+
+Using [hey]
+
+```bash
+hey 'http://localhost:9098/fizzbuzz?int1=3&int2=5&limit=42&str1=fizz&str2=buzz' -H 'accept: application/json'
+```
+
+Benchmark on my very sloowwww machine:
+cpu `Intel(R) Core(TM) m3-6Y30 CPU @ 0.90GHz`
+```
+Summary:
+  Total:	3.2697 secs
+  Slowest:	3.1690 secs
+  Fastest:	0.0052 secs
+  Average:	0.4893 secs
+  Requests/sec:	61.1683
+
+  Total data:	50800 bytes
+  Size/request:	254 bytes
+
+Response time histogram:
+  0.005 [1]	|
+  0.322 [138]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.638 [7]	|■■
+  0.954 [13]	|■■■■
+  1.271 [7]	|■■
+  1.587 [8]	|■■
+  1.903 [8]	|■■
+  2.220 [4]	|■
+  2.536 [6]	|■■
+  2.853 [5]	|■
+  3.169 [3]	|■
+
+Latency distribution:
+  10% in 0.0068 secs
+  25% in 0.0091 secs
+  50% in 0.0125 secs
+  75% in 0.7773 secs
+  90% in 1.8318 secs
+  95% in 2.3779 secs
+  99% in 3.1628 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.0005 secs, 0.0052 secs, 3.1690 secs
+  DNS-lookup:	0.0003 secs, 0.0000 secs, 0.0058 secs
+  req write:	0.0001 secs, 0.0000 secs, 0.0006 secs
+  resp wait:	0.4885 secs, 0.0051 secs, 3.1682 secs
+  resp read:	0.0001 secs, 0.0001 secs, 0.0002 secs
+
+Status code distribution:
+  [200]	200 responses
+
+```
+
 Using it as a package
 ----------------
 

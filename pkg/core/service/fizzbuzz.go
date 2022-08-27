@@ -9,6 +9,7 @@ import (
 type fizzbuzzSVC struct {
 }
 
+// NewFizzbuzzSVC instanciate a fizzbuzzSVC
 func NewFizzbuzzSVC() *fizzbuzzSVC {
 	return &fizzbuzzSVC{}
 }

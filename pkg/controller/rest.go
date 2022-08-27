@@ -28,6 +28,7 @@ type RestAPI struct {
 	requestsRepo      ports.RequestsRepository
 }
 
+// RestAPIError error struct to send a json result of an error
 type RestAPIError struct {
 	Error string `json:"error"`
 }

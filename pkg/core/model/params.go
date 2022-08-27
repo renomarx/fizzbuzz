@@ -7,12 +7,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Params defining fizzbuzz params structure
 type Params struct {
-	Int1  int
-	Int2  int
+	// Int1 first divider
+	Int1 int
+	// Int2 second divider
+	Int2 int
+	// Limit should be >= 1
 	Limit int
-	Str1  string
-	Str2  string
+	// Str1 first replacer string
+	Str1 string
+	// Str2 second replacer string
+	Str2 string
 }
 
 // Parse parse params from strings, return the first error encountered

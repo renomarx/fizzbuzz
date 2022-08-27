@@ -3,10 +3,10 @@
 init-env:
 	./scripts/init_env.sh
 
-build:
+build: init-env
 	docker-compose build
 
-dev: build init-env
+dev: build
 	docker-compose up -d
 
 build-base:
