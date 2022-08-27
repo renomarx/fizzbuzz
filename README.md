@@ -50,7 +50,7 @@ make tests
 Benchmarks
 ----------
 
-Using [hey]
+Using [hey](https://github.com/rakyll/hey)
 
 ```bash
 hey 'http://localhost:9098/fizzbuzz?int1=3&int2=5&limit=42&str1=fizz&str2=buzz' -H 'accept: application/json'
