@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"crypto/md5"
 	"fmt"
 	"os"
 
@@ -12,13 +11,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// SQLiteRepo repository using SQLite db
-type SQLiteRepo struct {
-	DB *sqlx.DB
+const SQLiteQueueSize = 4200
+
+// SQLiteQueueRepo repository using SQLite db, with a queue
+type SQLiteQueueRepo struct {
+	queue chan requestsCounter
+	DB    *sqlx.DB
 }
 
 type requestsCounter struct {
-	Hash    string `db:"hash"`
 	Int1    int    `db:"int1"`
 	Int2    int    `db:"int2"`
 	Limit   int    `db:"lim"`
@@ -33,8 +34,6 @@ func (c *requestsCounter) FromParams(params model.Params) {
 	c.Limit = params.Limit
 	c.Str1 = params.Str1
 	c.Str2 = params.Str2
-	str := fmt.Sprintf("%d_%d_%d_%s_%s", c.Int1, c.Int2, c.Limit, c.Str1, c.Str2)
-	c.Hash = fmt.Sprintf("%x", md5.Sum([]byte(str)))
 }
 
 func (c *requestsCounter) ToStats() model.Stats {
@@ -48,8 +47,8 @@ func (c *requestsCounter) ToStats() model.Stats {
 	}
 }
 
-// NewSQLIteRepo SQLiteRepo constructor
-func NewSQLIteRepo() *SQLiteRepo {
+// NewSQLIteRepo SQLiteQueueRepo constructor
+func NewSQLIteRepo() *SQLiteQueueRepo {
 	// For in-memory: dsn = ":memory:"
 	dsn := os.Getenv("SQLITE_DSN")
 	db, err := sqlx.Open("sqlite3", dsn)
@@ -62,14 +61,27 @@ func NewSQLIteRepo() *SQLiteRepo {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	return &SQLiteRepo{
-		DB: db,
+	return &SQLiteQueueRepo{
+		queue: make(chan requestsCounter, SQLiteQueueSize),
+		DB:    db,
 	}
 }
 
-func (repo *SQLiteRepo) Inc(params model.Params, number int) error {
+func (repo *SQLiteQueueRepo) Inc(params model.Params, number int) error {
 	requestCounter := requestsCounter{}
 	requestCounter.FromParams(params)
+	requestCounter.Counter = number
+	repo.queue <- requestCounter
+	return nil
+}
+
+func (repo *SQLiteQueueRepo) Run() {
+	for requestsCounter := range repo.queue {
+		repo.doInc(requestsCounter)
+	}
+}
+
+func (repo *SQLiteQueueRepo) doInc(requestCounter requestsCounter) error {
 	// Insert if not exists
 	_, err := repo.DB.NamedExec(`
 		INSERT OR IGNORE INTO requests_counters
@@ -82,7 +94,6 @@ func (repo *SQLiteRepo) Inc(params model.Params, number int) error {
 		return err
 	}
 	// Update
-	requestCounter.Counter = number
 	res, err := repo.DB.NamedExec(`
 		UPDATE requests_counters SET counter = counter + :counter
 		WHERE int1=:int1
@@ -109,7 +120,7 @@ func (repo *SQLiteRepo) Inc(params model.Params, number int) error {
 	return nil
 }
 
-func (repo *SQLiteRepo) GetMaxStats() (stats model.Stats, err error) {
+func (repo *SQLiteQueueRepo) GetMaxStats() (stats model.Stats, err error) {
 	rc := requestsCounter{}
 	err = repo.DB.Get(&rc, "SELECT * FROM requests_counters ORDER BY counter DESC LIMIT 1")
 	if err != nil {
@@ -120,7 +131,7 @@ func (repo *SQLiteRepo) GetMaxStats() (stats model.Stats, err error) {
 	return
 }
 
-func (repo *SQLiteRepo) error(msg string, err error) {
+func (repo *SQLiteQueueRepo) error(msg string, err error) {
 	model.AppMetrics.IncDatabaseErrors(msg)
 	logrus.Error(err)
 }

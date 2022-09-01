@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/renomarx/fizzbuzz/pkg/core/model"
@@ -38,7 +39,7 @@ func TestRestAPIWholeFlow(t *testing.T) {
 	api := NewRestAPI()
 
 	// Initialization of test database
-	requestsRepo, ok := api.requestsRepo.(*repository.SQLiteRepo)
+	requestsRepo, ok := api.requestsRepo.(*repository.SQLiteQueueRepo)
 	if !ok {
 		t.Fatal("requestsRepo is not SQLiteRepo - implementation has changed ?")
 	}
@@ -70,6 +71,7 @@ func TestRestAPIWholeFlow(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 
 	// Getting stats: should be fizz buzz params
+	time.Sleep(10 * time.Millisecond) // Giving time for the worker to handle the queue
 	req, err = http.NewRequest("GET", "/stats", nil)
 	if err != nil {
 		t.Error(err)
@@ -105,6 +107,7 @@ func TestRestAPIWholeFlow(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 
 	// Getting stats again: should be gin tonic params, with counter = 2
+	time.Sleep(10 * time.Millisecond) // Giving time for the worker to handle the queue
 	req, err = http.NewRequest("GET", "/stats", nil)
 	if err != nil {
 		t.Error(err)

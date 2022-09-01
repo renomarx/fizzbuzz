@@ -37,6 +37,7 @@ type RestAPIError struct {
 func NewRestAPI() *RestAPI {
 	fizzbuzzSVC := service.NewFizzbuzzSVC()
 	requestsRepo := repository.NewSQLIteRepo()
+	go requestsRepo.Run()
 	return &RestAPI{
 		MetricsController: NewMetricsController(),
 		fizzbuzzSVC:       fizzbuzzSVC,
