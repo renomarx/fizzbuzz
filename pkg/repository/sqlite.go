@@ -70,30 +70,18 @@ func NewSQLIteRepo() *SQLiteRepo {
 func (repo *SQLiteRepo) Inc(params model.Params, number int) error {
 	requestCounter := requestsCounter{}
 	requestCounter.FromParams(params)
-	// Insert if not exists
-	_, err := repo.DB.NamedExec(`
-		INSERT OR IGNORE INTO requests_counters
-		(int1, int2, lim, str1, str2, counter)
+	requestCounter.Counter = number
+	// Upsert
+	res, err := repo.DB.NamedExec(`
+		INSERT INTO requests_counters
+		(hash, int1, int2, lim, str1, str2, counter)
 		VALUES
-		(:int1, :int2, :lim, :str1, :str2, 0)
+		(:hash, :int1, :int2, :lim, :str1, :str2, :counter)
+  	ON CONFLICT(hash) DO UPDATE SET
+			counter = counter + excluded.counter
 		`, requestCounter)
 	if err != nil {
 		repo.error("error inserting requests_counter", err)
-		return err
-	}
-	// Update
-	requestCounter.Counter = number
-	res, err := repo.DB.NamedExec(`
-		UPDATE requests_counters SET counter = counter + :counter
-		WHERE int1=:int1
-		AND int2=:int2
-		AND int2=:int2
-		AND lim=:lim
-		AND str1=:str1
-		AND str2=:str2
-		`, requestCounter)
-	if err != nil {
-		repo.error("error incrementing requests_counter", err)
 		return err
 	}
 	nbRows, err := res.RowsAffected()
